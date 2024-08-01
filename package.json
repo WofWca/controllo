@@ -13,6 +13,7 @@
   "dependencies": {
     "@plasmohq/storage": "^1.5.0",
     "daisyui": "^2.51.6",
+    "datebook": "^8.0.1",
     "plasmo": "0.68.0",
     "react": "18.2.0",
     "react-dom": "18.2.0"
