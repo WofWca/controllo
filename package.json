@@ -1,8 +1,8 @@
 {
   "name": "controllo",
-  "displayName": "Controllo",
+  "displayName": "Subscription Management Tool",
   "version": "1.0.0",
-  "description": "Track all your subscriptions in one place",
+  "description": "Easily manage your subscriptions, get bill notifications, and never miss a due date again",
   "author": "Daniel Castillo",
   "scripts": {
     "dev": "plasmo dev",
