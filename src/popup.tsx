@@ -20,7 +20,9 @@ const IndexPopup = () => {
   })
   const [update, setUpdate] = useState(false)
   const controlloData = useGetControlloData(update)
-  const [controlloDataTemp, setControlloDataTemp] = useState([])
+  const [controlloDataTemp, setControlloDataTemp] = useState<
+    typeof controlloData
+  >([])
 
   useEffect(() => {
     if (controlloData !== undefined) setControlloDataTemp([...controlloData])
