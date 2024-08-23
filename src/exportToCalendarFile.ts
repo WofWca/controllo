@@ -88,8 +88,9 @@ function subscriptionToICalendar(
     throw new Error(`Unhandled recurrence frequency: "${frequency}"`);
   })();
 
+  const title = subscription.service + ' subscription'; // TODO i18n
   const iCalendar = new ICalendar({
-    title: subscription.service + ' subscription', // TODO i18n
+    title: title,
     description: subscription.serviceLink,
     start: date,
     recurrence: manuallySetRecurrence
@@ -108,6 +109,14 @@ function subscriptionToICalendar(
   }
 
   iCalendar.addProperty("CATEGORIES", "SUBSCRIPTIONS-CONTROLLO")
+
+  iCalendar.addAlarm({
+    action: "DISPLAY",
+    description: title,
+    trigger: {
+      days: 2,
+    },
+  });
 
   return iCalendar;
 
