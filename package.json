@@ -1,7 +1,7 @@
 {
   "name": "controllo",
   "displayName": "Subscription Management Tool",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Easily manage your subscriptions, get bill notifications, and never miss a due date again",
   "author": "Daniel Castillo",
   "scripts": {
