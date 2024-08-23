@@ -41,23 +41,72 @@ function subscriptionToICalendar(
       ? "YEARLY"
       : null
 
+  // Careful: we might mutate the date below.
+  const date = new Date(subscription.date);
+
+  // By default recurrence does not work well e.g. for the 31st day of month,
+  // it will skip months that have < 31 days.
+  // https://www.rfc-editor.org/rfc/rfc5545#section-3.3.10
+  // > Recurrence rules may generate recurrence instances with an invalid
+  // > date (e.g., February 30)
+  // > Such recurrence instances MUST be ignored and MUST NOT be
+  // > counted as part of the recurrence set.
+  //
+  // We need to handle this manually.
+  const manuallySetRecurrence: string | null = (function () {
+    if (frequency === "YEARLY") {
+      // Please tell me this is the only leap day out there.
+      if (
+        date.getMonth() == 1 && // February
+        date.getDate() == 29
+      ) {
+        // Last day of the month
+        // Apparently this doesn't work for some calendar apps...
+        // return `FREQ=${frequency};BYMONTH=${date.getMonth() + 1}BYMONTHDAY=-1;INTERVAL=1`
+
+        date.setDate(28);
+        return null;
+      }
+      return null;
+    } else if (frequency === "MONTHLY") {
+      const monthDay = date.getDate();
+      if (monthDay <= 28) {
+        return null;
+      }
+
+      // https://stackoverflow.com/questions/38446725/get-number-of-days-in-the-current-month-using-javascript/38446764#38446764
+      // `date.getMonth() + 1` gives next month,
+      // and day "0" will "carry over" to previous month
+      // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/Date#parameters
+      const lastDayOfCurrMonth =
+        (new Date(date.getFullYear(), date.getMonth() + 1, 0)).getDate()
+      const daysBeforeEndOfMonth = lastDayOfCurrMonth - monthDay;
+      // `BYMONTHDAY=-1` gives last day of month, -2 gives second last,
+      // so we need to subtract 1 from the diff.
+      return `FREQ=${frequency};BYMONTHDAY=${-1 * (daysBeforeEndOfMonth + 1)};INTERVAL=1`;
+    }
+    throw new Error(`Unhandled recurrence frequency: "${frequency}"`);
+  })();
+
   const iCalendar = new ICalendar({
     title: subscription.service + ' subscription', // TODO i18n
     description: subscription.serviceLink,
-    start: new Date(subscription.date),
-    recurrence: {
-      // TODO fix: this does not work well 31st day of month,
-      // it will skip months that have < 31 days...
-      // Looks like we'll have to handle this manually:
-      // https://www.rfc-editor.org/rfc/rfc5545#section-3.3.10
-      // > Recurrence rules may generate recurrence instances with an invalid
-      // > date (e.g., February 30)
-      // > Such recurrence instances MUST be ignored and MUST NOT be
-      // > counted as part of the recurrence set.
-      frequency,
-      interval: 1,
-    },
+    start: date,
+    recurrence: manuallySetRecurrence
+      ? undefined
+      : {
+          frequency,
+          interval: 1
+        }
   });
+  if (manuallySetRecurrence) {
+    // TODO add to description that we changed the date?
+    // Or is it good enough? We're only making it off by a day,
+    // plus who knows how the subscription service actually handles
+    // the dates itself.
+    iCalendar.setMeta("RRULE", manuallySetRecurrence);
+  }
+
   iCalendar.addProperty("CATEGORIES", "SUBSCRIPTIONS-CONTROLLO")
 
   return iCalendar;
